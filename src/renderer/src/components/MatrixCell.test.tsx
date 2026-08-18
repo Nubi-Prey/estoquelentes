@@ -15,15 +15,17 @@ const variant: StockVariant = {
   updatedAt: 0
 }
 
+const TARGET = 3
+
 describe('MatrixCell', () => {
   it('shows a dash placeholder for an empty cell in view mode', () => {
-    render(<MatrixCell variant={undefined} editMode={false} onAdjust={vi.fn()} />)
+    render(<MatrixCell variant={undefined} editMode={false} target={TARGET} onAdjust={vi.fn()} />)
 
     expect(screen.getByText('—')).toBeInTheDocument()
   })
 
   it('renders quantity read-only in view mode, without +/- controls', () => {
-    render(<MatrixCell variant={variant} editMode={false} onAdjust={vi.fn()} />)
+    render(<MatrixCell variant={variant} editMode={false} target={TARGET} onAdjust={vi.fn()} />)
 
     expect(screen.getByText('3')).toBeInTheDocument()
     expect(screen.queryByRole('button')).not.toBeInTheDocument()
@@ -31,7 +33,7 @@ describe('MatrixCell', () => {
 
   it('creates a variant by clicking the empty-cell "+" in edit mode', async () => {
     const onAdjust = vi.fn()
-    render(<MatrixCell variant={undefined} editMode={true} onAdjust={onAdjust} />)
+    render(<MatrixCell variant={undefined} editMode={true} target={TARGET} onAdjust={onAdjust} />)
 
     await userEvent.click(screen.getByRole('button', { name: 'Adicionar lente nesta célula' }))
 
@@ -40,7 +42,7 @@ describe('MatrixCell', () => {
 
   it('increments and decrements an existing quantity in edit mode', async () => {
     const onAdjust = vi.fn()
-    render(<MatrixCell variant={variant} editMode={true} onAdjust={onAdjust} />)
+    render(<MatrixCell variant={variant} editMode={true} target={TARGET} onAdjust={onAdjust} />)
 
     await userEvent.click(screen.getByRole('button', { name: 'Adicionar uma unidade' }))
     await userEvent.click(screen.getByRole('button', { name: 'Remover uma unidade' }))
@@ -50,24 +52,46 @@ describe('MatrixCell', () => {
   })
 
   it('disables the decrement button at zero quantity', () => {
-    render(<MatrixCell variant={{ ...variant, quantity: 0 }} editMode={true} onAdjust={vi.fn()} />)
+    render(
+      <MatrixCell
+        variant={{ ...variant, quantity: 0 }}
+        editMode={true}
+        target={TARGET}
+        onAdjust={vi.fn()}
+      />
+    )
 
     expect(screen.getByRole('button', { name: 'Remover uma unidade' })).toBeDisabled()
   })
 
   it('colors the quantity by stock status: out of stock, below target, at target', () => {
     const { rerender } = render(
-      <MatrixCell variant={{ ...variant, quantity: 0 }} editMode={false} onAdjust={vi.fn()} />
+      <MatrixCell
+        variant={{ ...variant, quantity: 0 }}
+        editMode={false}
+        target={TARGET}
+        onAdjust={vi.fn()}
+      />
     )
     expect(screen.getByText('0')).toHaveClass('text-red-600')
 
     rerender(
-      <MatrixCell variant={{ ...variant, quantity: 1 }} editMode={false} onAdjust={vi.fn()} />
+      <MatrixCell
+        variant={{ ...variant, quantity: 1 }}
+        editMode={false}
+        target={TARGET}
+        onAdjust={vi.fn()}
+      />
     )
     expect(screen.getByText('1')).toHaveClass('text-amber-600')
 
     rerender(
-      <MatrixCell variant={{ ...variant, quantity: 3 }} editMode={false} onAdjust={vi.fn()} />
+      <MatrixCell
+        variant={{ ...variant, quantity: 3 }}
+        editMode={false}
+        target={TARGET}
+        onAdjust={vi.fn()}
+      />
     )
     expect(screen.getByText('3')).toHaveClass('text-emerald-600')
   })

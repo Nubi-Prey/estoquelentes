@@ -11,6 +11,7 @@ interface StockMatrixProps {
   variants: StockVariant[]
   category: LensCategory
   editMode: boolean
+  target: number
   onAdjust: (req: AdjustQuantityRequest) => void
 }
 
@@ -18,6 +19,7 @@ export function StockMatrix({
   variants,
   category,
   editMode,
+  target,
   onAdjust
 }: StockMatrixProps): React.JSX.Element {
   const sphereRows = deriveSphereRows(variants, category)
@@ -54,6 +56,7 @@ export function StockMatrix({
                     <MatrixCell
                       variant={variant}
                       editMode={editMode}
+                      target={target}
                       onAdjust={(delta) =>
                         onAdjust({
                           category,

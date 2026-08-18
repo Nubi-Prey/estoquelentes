@@ -60,6 +60,38 @@ export function toHundredths(displayValue: string): number {
   return Math.round(Number.parseFloat(displayValue) * 100)
 }
 
+export interface ParsedBarcode {
+  category: LensCategory
+  sphereHundredths: number
+  cylinderHundredths: number
+}
+
+// 12-digit format: LLLL S EEE I CCC
+// LLLL (0-3): lot, ignored. S (4): sign, 1=positive/0=negative. EEE (5-7): sphere
+// magnitude in hundredths (e.g. "025" -> 25 = 0.25). I (8): ignored. CCC (9-11):
+// cylinder magnitude in hundredths, always stored negative — the format has no
+// separate cylinder sign bit since this domain's cylinder is always <= 0.
+export function parseBarcode(code: string): ParsedBarcode | null {
+  const trimmed = code.trim()
+  if (!/^\d{12}$/.test(trimmed)) return null
+
+  const isPositiveBit = trimmed[4] === '1'
+  const sphereMagnitude = Number.parseInt(trimmed.slice(5, 8), 10)
+  const cylinderMagnitude = Number.parseInt(trimmed.slice(9, 12), 10)
+
+  // `|| 0` normalizes -0 (e.g. a negative-bit zero magnitude) to 0 — Object.is(-0, 0)
+  // is false, which would otherwise make an all-zero cylinder/sphere compare unequal.
+  const sphereHundredths = (isPositiveBit ? sphereMagnitude : -sphereMagnitude) || 0
+  const cylinderHundredths = -cylinderMagnitude || 0
+  // Sphere 0 always belongs to the positive category (see Domain model), regardless
+  // of what the sign bit says — a "negative zero" isn't a valid lens.
+  const category: LensCategory = sphereHundredths >= 0 ? 'positive' : 'negative'
+
+  if (!isQuarterStep(sphereHundredths) || !isQuarterStep(cylinderHundredths)) return null
+
+  return { category, sphereHundredths, cylinderHundredths }
+}
+
 export type StockStatus = 'outOfStock' | 'belowTarget' | 'atTarget'
 
 // Placeholder default until per-category/per-variant targets exist (the spec's

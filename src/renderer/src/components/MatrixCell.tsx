@@ -1,11 +1,12 @@
 import { Minus, Plus } from 'lucide-react'
 import { cn } from '@renderer/lib/utils'
-import { DEFAULT_STOCK_TARGET, getStockStatus, type StockStatus } from '@renderer/lib/matrix'
+import { getStockStatus, type StockStatus } from '@renderer/lib/matrix'
 import type { StockVariant } from '@shared/ipc'
 
 interface MatrixCellProps {
   variant: StockVariant | undefined
   editMode: boolean
+  target: number
   onAdjust: (delta: number) => void
 }
 
@@ -15,7 +16,12 @@ const STATUS_TEXT_CLASS: Record<StockStatus, string> = {
   atTarget: 'text-emerald-600 dark:text-emerald-400'
 }
 
-export function MatrixCell({ variant, editMode, onAdjust }: MatrixCellProps): React.JSX.Element {
+export function MatrixCell({
+  variant,
+  editMode,
+  target,
+  onAdjust
+}: MatrixCellProps): React.JSX.Element {
   const quantity = variant?.quantity ?? 0
 
   if (!variant && !editMode) {
@@ -37,7 +43,7 @@ export function MatrixCell({ variant, editMode, onAdjust }: MatrixCellProps): Re
     )
   }
 
-  const status = getStockStatus(quantity, DEFAULT_STOCK_TARGET)
+  const status = getStockStatus(quantity, target)
 
   return (
     <div className="flex h-12 w-full items-center justify-center gap-1 font-medium">

@@ -5,6 +5,8 @@ import log from 'electron-log/main'
 import icon from '../../resources/icon.png?asset'
 import { runMigrations } from './db/client'
 import { registerStockIpcHandlers } from './ipc/stock'
+import { registerFileIpcHandlers } from './ipc/file'
+import { registerHistoryIpcHandlers } from './ipc/history'
 
 // Unifies main + renderer console output and uncaught errors into this process's
 // stdout (and <userData>/logs/main.log) so debugging never needs a screenshot.
@@ -18,8 +20,8 @@ if (is.dev) {
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+    width: 1120,
+    height: 760,
     show: false,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
@@ -54,6 +56,8 @@ app.whenReady().then(() => {
 
   runMigrations()
   registerStockIpcHandlers()
+  registerFileIpcHandlers()
+  registerHistoryIpcHandlers()
 
   createWindow()
 

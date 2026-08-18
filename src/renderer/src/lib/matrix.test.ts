@@ -7,6 +7,7 @@ import {
   formatDiopter,
   getStockStatus,
   isQuarterStep,
+  parseBarcode,
   toHundredths
 } from './matrix'
 import type { StockVariant } from '@shared/ipc'
@@ -108,6 +109,47 @@ describe('getStockStatus', () => {
   it('classifies a quantity at or above the target as at target', () => {
     expect(getStockStatus(3, 3)).toBe('atTarget')
     expect(getStockStatus(10, 3)).toBe('atTarget')
+  })
+})
+
+describe('parseBarcode', () => {
+  it('parses a positive lens: LLLL=0001 S=1 EEE=425 I=0 CCC=050 -> sphere +4.25, cylinder -0.50', () => {
+    expect(parseBarcode('000114250050')).toEqual({
+      category: 'positive',
+      sphereHundredths: 425,
+      cylinderHundredths: -50
+    })
+  })
+
+  it('parses a negative lens: LLLL=0000 S=0 EEE=025 I=0 CCC=200 -> sphere -0.25, cylinder -2.00', () => {
+    expect(parseBarcode('000000250200')).toEqual({
+      category: 'negative',
+      sphereHundredths: -25,
+      cylinderHundredths: -200
+    })
+  })
+
+  it('forces sphere=0 into the positive category regardless of the sign bit', () => {
+    expect(parseBarcode('000000000000')).toEqual({
+      category: 'positive',
+      sphereHundredths: 0,
+      cylinderHundredths: 0
+    })
+  })
+
+  it('rejects malformed input: wrong length, non-digits, or off-step magnitudes', () => {
+    expect(parseBarcode('12345')).toBeNull()
+    expect(parseBarcode('0001a4250050')).toBeNull()
+    // EEE = 037 is not a multiple of 25
+    expect(parseBarcode('000100370050')).toBeNull()
+  })
+
+  it('trims surrounding whitespace, as a barcode scanner’s Enter keystroke might leave', () => {
+    expect(parseBarcode('  000114250050\n')).toEqual({
+      category: 'positive',
+      sphereHundredths: 425,
+      cylinderHundredths: -50
+    })
   })
 })
 
