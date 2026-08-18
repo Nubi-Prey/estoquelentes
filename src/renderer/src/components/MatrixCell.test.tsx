@@ -54,4 +54,21 @@ describe('MatrixCell', () => {
 
     expect(screen.getByRole('button', { name: 'Remover uma unidade' })).toBeDisabled()
   })
+
+  it('colors the quantity by stock status: out of stock, below target, at target', () => {
+    const { rerender } = render(
+      <MatrixCell variant={{ ...variant, quantity: 0 }} editMode={false} onAdjust={vi.fn()} />
+    )
+    expect(screen.getByText('0')).toHaveClass('text-red-600')
+
+    rerender(
+      <MatrixCell variant={{ ...variant, quantity: 1 }} editMode={false} onAdjust={vi.fn()} />
+    )
+    expect(screen.getByText('1')).toHaveClass('text-amber-600')
+
+    rerender(
+      <MatrixCell variant={{ ...variant, quantity: 3 }} editMode={false} onAdjust={vi.fn()} />
+    )
+    expect(screen.getByText('3')).toHaveClass('text-emerald-600')
+  })
 })

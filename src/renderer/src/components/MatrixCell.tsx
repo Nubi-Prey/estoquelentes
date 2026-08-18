@@ -1,5 +1,6 @@
 import { Minus, Plus } from 'lucide-react'
 import { cn } from '@renderer/lib/utils'
+import { DEFAULT_STOCK_TARGET, getStockStatus, type StockStatus } from '@renderer/lib/matrix'
 import type { StockVariant } from '@shared/ipc'
 
 interface MatrixCellProps {
@@ -8,11 +9,19 @@ interface MatrixCellProps {
   onAdjust: (delta: number) => void
 }
 
+const STATUS_TEXT_CLASS: Record<StockStatus, string> = {
+  outOfStock: 'text-red-600 dark:text-red-400',
+  belowTarget: 'text-amber-600 dark:text-amber-400',
+  atTarget: 'text-emerald-600 dark:text-emerald-400'
+}
+
 export function MatrixCell({ variant, editMode, onAdjust }: MatrixCellProps): React.JSX.Element {
   const quantity = variant?.quantity ?? 0
 
   if (!variant && !editMode) {
-    return <div className="flex h-12 w-16 items-center justify-center text-muted-foreground">—</div>
+    return (
+      <div className="flex h-12 w-full items-center justify-center text-muted-foreground">—</div>
+    )
   }
 
   if (!variant && editMode) {
@@ -20,7 +29,7 @@ export function MatrixCell({ variant, editMode, onAdjust }: MatrixCellProps): Re
       <button
         type="button"
         onClick={() => onAdjust(1)}
-        className="flex h-12 w-16 items-center justify-center text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+        className="flex h-12 w-full items-center justify-center text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
         aria-label="Adicionar lente nesta célula"
       >
         <Plus className="h-4 w-4" />
@@ -28,13 +37,10 @@ export function MatrixCell({ variant, editMode, onAdjust }: MatrixCellProps): Re
     )
   }
 
+  const status = getStockStatus(quantity, DEFAULT_STOCK_TARGET)
+
   return (
-    <div
-      className={cn(
-        'flex h-12 w-16 items-center justify-center gap-1 font-medium',
-        quantity === 0 && 'text-muted-foreground'
-      )}
-    >
+    <div className="flex h-12 w-full items-center justify-center gap-1 font-medium">
       {editMode && (
         <button
           type="button"
@@ -46,7 +52,7 @@ export function MatrixCell({ variant, editMode, onAdjust }: MatrixCellProps): Re
           <Minus className="h-3 w-3" />
         </button>
       )}
-      <span className="tabular-nums">{quantity}</span>
+      <span className={cn('tabular-nums', STATUS_TEXT_CLASS[status])}>{quantity}</span>
       {editMode && (
         <button
           type="button"

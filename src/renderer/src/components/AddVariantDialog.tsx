@@ -16,19 +16,22 @@ import { isQuarterStep, toHundredths } from '@renderer/lib/matrix'
 import type { AdjustQuantityRequest, LensCategory } from '@shared/ipc'
 
 interface AddVariantDialogProps {
+  defaultCategory: LensCategory
   onAdd: (req: AdjustQuantityRequest) => void
 }
 
-export function AddVariantDialog({ onAdd }: AddVariantDialogProps): React.JSX.Element {
+export function AddVariantDialog({
+  defaultCategory,
+  onAdd
+}: AddVariantDialogProps): React.JSX.Element {
   const [open, setOpen] = useState(false)
-  const [category, setCategory] = useState<LensCategory>('positive')
+  const [category, setCategory] = useState<LensCategory>(defaultCategory)
   const [sphere, setSphere] = useState('')
   const [cylinder, setCylinder] = useState('')
   const [quantity, setQuantity] = useState('1')
   const [error, setError] = useState<string | null>(null)
 
   function reset(): void {
-    setCategory('positive')
     setSphere('')
     setCylinder('')
     setQuantity('1')
@@ -73,7 +76,11 @@ export function AddVariantDialog({ onAdd }: AddVariantDialogProps): React.JSX.El
       open={open}
       onOpenChange={(next) => {
         setOpen(next)
-        if (!next) reset()
+        if (next) {
+          setCategory(defaultCategory)
+        } else {
+          reset()
+        }
       }}
     >
       <DialogTrigger asChild>

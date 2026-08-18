@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
+  buildQuarterStepRange,
   deriveSphereRows,
   deriveCylinderColumns,
   findVariant,
   formatDiopter,
+  getStockStatus,
   isQuarterStep,
   toHundredths
 } from './matrix'
@@ -46,25 +48,66 @@ describe('isQuarterStep', () => {
   })
 })
 
-describe('deriveSphereRows / deriveCylinderColumns', () => {
-  it('derives distinct sorted axis values from the current data, not a fixed range', () => {
-    const variants = [
-      makeVariant({ sphereHundredths: 0, cylinderHundredths: 0 }),
-      makeVariant({ sphereHundredths: 400, cylinderHundredths: -200 }),
-      makeVariant({ sphereHundredths: -300, cylinderHundredths: -50, category: 'negative' }),
-      makeVariant({ sphereHundredths: 400, cylinderHundredths: -50 })
-    ]
+describe('buildQuarterStepRange', () => {
+  it('builds an inclusive range stepped by 0.25 (25 hundredths)', () => {
+    expect(buildQuarterStepRange(-100, 0)).toEqual([-100, -75, -50, -25, 0])
+  })
+})
 
-    expect(deriveSphereRows(variants)).toEqual([400, 0, -300])
-    expect(deriveCylinderColumns(variants)).toEqual([0, -50, -200])
+describe('deriveSphereRows / deriveCylinderColumns', () => {
+  it('always includes the full baseline grid for the category, even with zero stock', () => {
+    // Ordered by distance from zero: positive counts up (0, 0.25, ...), negative
+    // counts down from the value closest to zero (-0.25, -0.50, ...).
+    expect(deriveSphereRows([], 'positive')).toEqual(buildQuarterStepRange(0, 400))
+    expect(deriveSphereRows([], 'negative')).toEqual(
+      buildQuarterStepRange(-300, -25).sort((a, b) => b - a)
+    )
+    expect(deriveCylinderColumns([], 'positive')).toEqual(
+      buildQuarterStepRange(-200, 0).sort((a, b) => b - a)
+    )
   })
 
-  it('grows automatically when a new sphere/cylinder value appears in the data', () => {
-    const before = [makeVariant({ sphereHundredths: 400, cylinderHundredths: -200 })]
-    const after = [...before, makeVariant({ sphereHundredths: 425, cylinderHundredths: -200 })]
+  it('starts at zero and moves away from it, regardless of sign', () => {
+    expect(deriveSphereRows([], 'positive').slice(0, 3)).toEqual([0, 25, 50])
+    expect(deriveSphereRows([], 'negative').slice(0, 3)).toEqual([-25, -50, -75])
+  })
 
-    expect(deriveSphereRows(before)).toEqual([400])
-    expect(deriveSphereRows(after)).toEqual([425, 400])
+  it('only counts variants belonging to the requested category', () => {
+    const variants = [
+      makeVariant({ category: 'positive', sphereHundredths: 0, cylinderHundredths: 0 }),
+      makeVariant({ category: 'negative', sphereHundredths: -300, cylinderHundredths: -50 })
+    ]
+
+    // -300 must not leak into the positive axis just because it's in the data
+    expect(deriveSphereRows(variants, 'positive')).not.toContain(-300)
+    expect(deriveSphereRows(variants, 'negative')).toContain(-300)
+  })
+
+  it('grows past the baseline when a variant falls outside the known range', () => {
+    const variants = [
+      makeVariant({ category: 'positive', sphereHundredths: 425, cylinderHundredths: -225 })
+    ]
+
+    expect(deriveSphereRows(variants, 'positive').at(-1)).toBe(425)
+    expect(deriveCylinderColumns(variants, 'positive')[0]).toBe(0)
+    expect(deriveCylinderColumns(variants, 'positive').at(-1)).toBe(-225)
+  })
+})
+
+describe('getStockStatus', () => {
+  it('classifies zero as out of stock, regardless of target', () => {
+    expect(getStockStatus(0, 3)).toBe('outOfStock')
+    expect(getStockStatus(0, 0)).toBe('outOfStock')
+  })
+
+  it('classifies a positive quantity under the target as below target', () => {
+    expect(getStockStatus(1, 3)).toBe('belowTarget')
+    expect(getStockStatus(2, 3)).toBe('belowTarget')
+  })
+
+  it('classifies a quantity at or above the target as at target', () => {
+    expect(getStockStatus(3, 3)).toBe('atTarget')
+    expect(getStockStatus(10, 3)).toBe('atTarget')
   })
 })
 
