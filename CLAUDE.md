@@ -29,6 +29,10 @@ Stack: TypeScript, Electron + electron-vite, React + Tailwind v4 + hand-rolled s
    // read the response from the next 'message' event
    ```
 
+## Commits
+
+Use [Conventional Commits](https://www.conventionalcommits.org/) for commit messages (`feat:`, `fix:`, `refactor:`, `docs:`, `test:`, `chore:`, etc.).
+
 ## Commands
 
 ```bash
