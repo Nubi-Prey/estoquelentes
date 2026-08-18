@@ -1,9 +1,20 @@
 import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import log from 'electron-log/main'
 import icon from '../../resources/icon.png?asset'
 import { runMigrations } from './db/client'
 import { registerStockIpcHandlers } from './ipc/stock'
+
+// Unifies main + renderer console output and uncaught errors into this process's
+// stdout (and <userData>/logs/main.log) so debugging never needs a screenshot.
+log.initialize({ spyRendererConsole: true })
+log.errorHandler.startCatching()
+
+if (is.dev) {
+  // CDP on a fixed port for deep interactive debugging — dev only, never in a packaged build.
+  app.commandLine.appendSwitch('remote-debugging-port', '9222')
+}
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({

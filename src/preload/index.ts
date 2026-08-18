@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import 'electron-log/renderer'
 import { IPC_CHANNELS, type StockVariant, type AdjustQuantityRequest } from '@shared/ipc'
 
 const api = {

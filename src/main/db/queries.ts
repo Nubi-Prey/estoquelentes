@@ -1,13 +1,19 @@
 import { and, eq } from 'drizzle-orm'
-import { db } from './client'
+import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3'
 import { lensVariants, type LensVariant } from './schema'
+import type * as schema from './schema'
 import type { AdjustQuantityRequest } from '@shared/ipc'
 
-export function getAllVariants(): LensVariant[] {
+// Business logic takes the db instance as a parameter (instead of importing the
+// singleton from client.ts, which needs Electron's `app`) so it can be exercised
+// from a plain Vitest/Node script — see queries.test.ts — without booting Electron.
+export type Db = BetterSQLite3Database<typeof schema>
+
+export function getAllVariants(db: Db): LensVariant[] {
   return db.select().from(lensVariants).all()
 }
 
-export function adjustVariantQuantity(input: AdjustQuantityRequest): LensVariant {
+export function adjustVariantQuantity(db: Db, input: AdjustQuantityRequest): LensVariant {
   const { category, sphereHundredths, cylinderHundredths, delta } = input
 
   const existing = db
