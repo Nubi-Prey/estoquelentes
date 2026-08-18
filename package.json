@@ -1,7 +1,9 @@
 {
   "name": "estoquelentes",
-  "version": "0.0.1",
+  "version": "0.1.0-alpha.1",
   "description": "Gerenciador de estoque de blocos de lentes para ótica",
+  "author": "Murilo Alves <muriloalvesnp@gmail.com>",
+  "license": "MIT",
   "main": "./out/main/index.js",
   "scripts": {
     "format": "prettier --write .",

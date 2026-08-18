@@ -67,3 +67,7 @@ Detalhes de arquitetura, modelo de domínio (esférico/cilindro, formato do cód
 - **Configurações** — alternância de tema claro/escuro.
 
 **Ainda fora do escopo:** relatório de lentes mais vendidas (as ferramentas de exportação já existem, os dados de vendas ainda não), importação de estoque, desfazer um rollback. Veja [`EstoqueLentes.md`](./EstoqueLentes.md) para o spec original completo.
+
+## Licença
+
+[MIT](./LICENSE)
