@@ -13,8 +13,10 @@ App desktop pessoal (Electron) para gerenciar o estoque físico de blocos de len
 
 ## Pré-requisitos
 
+Só para quem vai **rodar o código-fonte** (desenvolvimento). Quem só quer usar o app já empacotado (instalador `.exe`/`.dmg`/`.AppImage`) não precisa de nada disso.
+
 - **Node.js 20+** e **npm 10+** (desenvolvido com Node v22.18.0 / npm 10.9.3)
-- Nenhuma toolchain de compilação nativa é necessária (sem Visual Studio Build Tools, Xcode Command Line Tools ou build-essential). O `better-sqlite3` v13 usa binários N-API pré-compilados, cujo ABI é estável entre Node e Electron — não há rebuild nativo no `postinstall`.
+- **Visual Studio Build Tools** (workload "Desktop development with C++") no Windows, ou Xcode Command Line Tools no macOS / build-essential no Linux, e **Python 3** — o `better-sqlite3` v13 já vem com binários pré-compilados e não precisa ser recompilado em uso normal, mas o `npm install` pode disparar uma recompilação nativa dele mesmo assim por uma peculiaridade conhecida do npm com pacotes que têm um `binding.gyp` no pacote ([npm/cli#5234](https://github.com/npm/cli/issues/5234)). Ter a toolchain instalada evita que isso quebre a instalação.
 
 ## Instalação
 
@@ -57,6 +59,11 @@ Detalhes de arquitetura, modelo de domínio (esférico/cilindro, formato do cód
 
 ## Status atual
 
-**Implementado (MVP):** matriz com visualização/edição, incremento e decremento manual por célula, auto-save imediato, crescimento dinâmico de linhas/colunas conforme novos valores de esférico/cilindro são cadastrados.
+**Implementado (MVP):** navegação lateral com quatro seções.
 
-**Ainda fora do escopo:** leitura de código de barras, histórico/auditoria (schema já existe no banco, sem UI), importação/exportação (JSON/SQL), rollback, relatórios de vendas. Veja [`EstoqueLentes.md`](./EstoqueLentes.md) para o spec original completo.
+- **Inventário** — matriz esférico×cilindro com visualização/edição, grade completa sempre visível (mesmo sem estoque), toggle de categoria positivo/negativo, status colorido por célula contra uma meta de estoque ajustável, leitura de código de barras (adicionar ou remover), cadastro manual de nova lente, crescimento dinâmico de linhas/colunas, auto-save imediato.
+- **Relatório** — exportação de lista de compras (texto ou JSON) das lentes abaixo da meta, e exportação do estoque completo (JSON ou SQL).
+- **Registro de auditoria** — toda alteração de estoque fica registrada, agrupada por dia, com rollback por dia (reversível só com confirmação).
+- **Configurações** — alternância de tema claro/escuro.
+
+**Ainda fora do escopo:** relatório de lentes mais vendidas (as ferramentas de exportação já existem, os dados de vendas ainda não), importação de estoque, desfazer um rollback. Veja [`EstoqueLentes.md`](./EstoqueLentes.md) para o spec original completo.

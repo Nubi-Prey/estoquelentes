@@ -53,7 +53,7 @@ npm run db:generate            # drizzle-kit generate — run after editing src/
 npm run db:studio               # drizzle-kit studio, browse the schema/data
 ```
 
-There is no build tool chain requirement beyond Node — `better-sqlite3` ships prebuilt N-API binaries (ABI-stable across Node and Electron), so **do not** re-add an `electron-builder install-app-deps` postinstall rebuild step; it forces a node-gyp source build that fails without Visual Studio Build Tools and isn't needed for this dependency.
+`better-sqlite3` ships prebuilt N-API binaries (ABI-stable across Node and Electron) and doesn't need compiling in normal use, so **do not** re-add an `electron-builder install-app-deps` postinstall rebuild step — it forces an explicit node-gyp source build that isn't needed for this dependency. That said, a plain `npm install` can *still* trigger a native rebuild attempt for it anyway: this is a known npm CLI quirk where any package with a `binding.gyp` in its tarball gets an implicit, unconditional node-gyp rebuild attempt, independent of install scripts or `gypfile: false` (npm/cli#5234) — it's inconsistent (not every `npm install` hits it) and not something fixable from this project's config. A developer building from source needs Visual Studio Build Tools ("Desktop development with C++") + Python on hand for when it does fire; end users of a packaged build never touch npm at all, so this never affects them.
 
 ## Architecture
 
