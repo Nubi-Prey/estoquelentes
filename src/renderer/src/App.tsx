@@ -3,6 +3,7 @@ import { useStock } from '@renderer/hooks/useStock'
 import { StockMatrix } from '@renderer/components/StockMatrix'
 import { EditModeToggle } from '@renderer/components/EditModeToggle'
 import { AddVariantDialog } from '@renderer/components/AddVariantDialog'
+import { ThemeToggle } from '@renderer/components/ThemeToggle'
 
 function App(): React.JSX.Element {
   const { variants, loading, adjust } = useStock()
@@ -15,6 +16,7 @@ function App(): React.JSX.Element {
         <div className="flex items-center gap-4">
           <EditModeToggle editMode={editMode} onChange={setEditMode} />
           {editMode && <AddVariantDialog onAdd={adjust} />}
+          <ThemeToggle />
         </div>
       </header>
 

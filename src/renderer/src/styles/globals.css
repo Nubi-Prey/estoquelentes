@@ -44,6 +44,26 @@
   --ring: oklch(0.708 0 0);
 }
 
+.dark {
+  --background: #1b1b1f;
+  --foreground: rgba(255, 255, 245, 0.86);
+  --card: #222222;
+  --card-foreground: rgba(255, 255, 245, 0.86);
+  --primary: #f2f2f2;
+  --primary-foreground: #1b1b1f;
+  --secondary: #32363f;
+  --secondary-foreground: rgba(255, 255, 245, 0.86);
+  --muted: #282828;
+  --muted-foreground: rgba(235, 235, 245, 0.6);
+  --accent: #32363f;
+  --accent-foreground: rgba(255, 255, 245, 0.86);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: rgba(255, 255, 245, 0.86);
+  --border: #414853;
+  --input: #414853;
+  --ring: #515c67;
+}
+
 * {
   border-color: var(--border);
 }
