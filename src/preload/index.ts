@@ -8,9 +8,6 @@ const api = {
     ipcRenderer.invoke(IPC_CHANNELS.STOCK_ADJUST_QUANTITY, req)
 }
 
-// Use `contextBridge` APIs to expose Electron APIs to
-// renderer only if context isolation is enabled, otherwise
-// just add to the DOM global.
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)
