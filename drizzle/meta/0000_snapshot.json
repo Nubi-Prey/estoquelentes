@@ -1,0 +1,179 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "a592a735-b9ad-488d-bb66-e2902c1f5fb7",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "tables": {
+    "lens_variants": {
+      "name": "lens_variants",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "category": {
+          "name": "category",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sphere_hundredths": {
+          "name": "sphere_hundredths",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "cylinder_hundredths": {
+          "name": "cylinder_hundredths",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch('subsec') * 1000)"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch('subsec') * 1000)"
+        }
+      },
+      "indexes": {
+        "lens_variants_variant_unique": {
+          "name": "lens_variants_variant_unique",
+          "columns": [
+            "category",
+            "sphere_hundredths",
+            "cylinder_hundredths"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "quantity_non_negative": {
+          "name": "quantity_non_negative",
+          "value": "\"lens_variants\".\"quantity\" >= 0"
+        },
+        "sphere_step_quarter": {
+          "name": "sphere_step_quarter",
+          "value": "\"lens_variants\".\"sphere_hundredths\" % 25 = 0"
+        },
+        "cylinder_step_quarter": {
+          "name": "cylinder_step_quarter",
+          "value": "\"lens_variants\".\"cylinder_hundredths\" % 25 = 0"
+        },
+        "cylinder_non_positive": {
+          "name": "cylinder_non_positive",
+          "value": "\"lens_variants\".\"cylinder_hundredths\" <= 0"
+        },
+        "sphere_sign_matches_category": {
+          "name": "sphere_sign_matches_category",
+          "value": "(\"lens_variants\".\"category\" = 'positive' AND \"lens_variants\".\"sphere_hundredths\" >= 0)\n          OR (\"lens_variants\".\"category\" = 'negative' AND \"lens_variants\".\"sphere_hundredths\" < 0)"
+        }
+      }
+    },
+    "stock_history": {
+      "name": "stock_history",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "variant_id": {
+          "name": "variant_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "delta": {
+          "name": "delta",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "resulting_quantity": {
+          "name": "resulting_quantity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source": {
+          "name": "source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'manual'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch('subsec') * 1000)"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "stock_history_variant_id_lens_variants_id_fk": {
+          "name": "stock_history_variant_id_lens_variants_id_fk",
+          "tableFrom": "stock_history",
+          "tableTo": "lens_variants",
+          "columnsFrom": [
+            "variant_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}
