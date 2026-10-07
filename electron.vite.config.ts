@@ -3,6 +3,10 @@ import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
+if (process.platform === 'linux' && !process.env.NO_SANDBOX) {
+  process.env.NO_SANDBOX = '1'
+}
+
 export default defineConfig({
   main: {
     plugins: [externalizeDepsPlugin()],

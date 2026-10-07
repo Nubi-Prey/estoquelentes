@@ -20,7 +20,8 @@
     "build:linux": "electron-vite build && electron-builder --linux",
     "db:generate": "drizzle-kit generate",
     "db:studio": "drizzle-kit studio",
-    "test": "vitest run"
+    "test": "vitest run",
+    "postinstall": "node node_modules/electron/install.js"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
