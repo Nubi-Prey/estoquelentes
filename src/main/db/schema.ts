@@ -44,7 +44,7 @@ export const stockHistory = sqliteTable('stock_history', {
     .references(() => lensVariants.id, { onDelete: 'cascade' }),
   delta: integer('delta').notNull(),
   resultingQuantity: integer('resulting_quantity').notNull(),
-  source: text('source', { enum: ['manual', 'barcode'] })
+  source: text('source', { enum: ['manual', 'barcode', 'import'] })
     .notNull()
     .default('manual'),
   createdAt: integer('created_at', { mode: 'timestamp_ms' })

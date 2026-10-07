@@ -63,11 +63,7 @@
       "indexes": {
         "lens_variants_variant_unique": {
           "name": "lens_variants_variant_unique",
-          "columns": [
-            "category",
-            "sphere_hundredths",
-            "cylinder_hundredths"
-          ],
+          "columns": ["category", "sphere_hundredths", "cylinder_hundredths"],
           "isUnique": true
         }
       },
@@ -151,12 +147,8 @@
           "name": "stock_history_variant_id_lens_variants_id_fk",
           "tableFrom": "stock_history",
           "tableTo": "lens_variants",
-          "columnsFrom": [
-            "variant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["variant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }

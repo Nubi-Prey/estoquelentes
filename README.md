@@ -30,18 +30,18 @@ Não há `.env` nem chaves de API — o app é 100% local. O único "estado de c
 
 ## Scripts
 
-| Script | Descrição |
-|---|---|
-| `npm run dev` | Roda o app em modo desenvolvimento, com HMR no renderer |
-| `npm run build` | Typecheck + build de produção |
-| `npm start` | Executa um build de produção (`electron-vite preview`) |
-| `npm run build:win` / `build:mac` / `build:linux` | Build + empacotamento via electron-builder para a plataforma alvo |
-| `npm run typecheck` | `tsc --noEmit` para as configs de main/preload e renderer |
-| `npm run lint` | ESLint |
-| `npm run format` | Prettier (`--write`) |
-| `npm test` | Roda a suíte de testes (Vitest) |
-| `npm run db:generate` | Gera uma nova migration a partir de `src/main/db/schema.ts` — rodar sempre que o schema mudar, e commitar o SQL gerado em `drizzle/` |
-| `npm run db:studio` | Abre o Drizzle Studio para inspecionar o banco |
+| Script                                            | Descrição                                                                                                                            |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `npm run dev`                                     | Roda o app em modo desenvolvimento, com HMR no renderer                                                                              |
+| `npm run build`                                   | Typecheck + build de produção                                                                                                        |
+| `npm start`                                       | Executa um build de produção (`electron-vite preview`)                                                                               |
+| `npm run build:win` / `build:mac` / `build:linux` | Build + empacotamento via electron-builder para a plataforma alvo                                                                    |
+| `npm run typecheck`                               | `tsc --noEmit` para as configs de main/preload e renderer                                                                            |
+| `npm run lint`                                    | ESLint                                                                                                                               |
+| `npm run format`                                  | Prettier (`--write`)                                                                                                                 |
+| `npm test`                                        | Roda a suíte de testes (Vitest)                                                                                                      |
+| `npm run db:generate`                             | Gera uma nova migration a partir de `src/main/db/schema.ts` — rodar sempre que o schema mudar, e commitar o SQL gerado em `drizzle/` |
+| `npm run db:studio`                               | Abre o Drizzle Studio para inspecionar o banco                                                                                       |
 
 ## Estrutura do projeto
 

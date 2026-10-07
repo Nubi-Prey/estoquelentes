@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Minus, Plus, ScanBarcode } from 'lucide-react'
 import { Button } from '@renderer/components/ui/button'
 import { Input } from '@renderer/components/ui/input'
@@ -13,6 +13,20 @@ export function BarcodeInput({ onScan }: BarcodeInputProps): React.JSX.Element {
   const [code, setCode] = useState('')
   const [direction, setDirection] = useState<1 | -1>(1)
   const [error, setError] = useState<string | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent): void {
+      if (e.key === 'F2') {
+        e.preventDefault()
+        inputRef.current?.focus()
+        inputRef.current?.select()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   function handleSubmit(e: React.FormEvent): void {
     e.preventDefault()
@@ -42,12 +56,13 @@ export function BarcodeInput({ onScan }: BarcodeInputProps): React.JSX.Element {
         {direction === 1 ? <Plus className="h-4 w-4" /> : <Minus className="h-4 w-4" />}
       </Button>
       <Input
+        ref={inputRef}
         value={code}
         onChange={(e) => {
           setCode(e.target.value)
           setError(null)
         }}
-        placeholder="Código de barras"
+        placeholder="Código (F2)"
         className="w-40 font-mono"
         aria-label="Código de barras"
       />

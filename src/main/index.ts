@@ -7,6 +7,7 @@ import { runMigrations } from './db/client'
 import { registerStockIpcHandlers } from './ipc/stock'
 import { registerFileIpcHandlers } from './ipc/file'
 import { registerHistoryIpcHandlers } from './ipc/history'
+import { registerReportIpcHandlers } from './ipc/report'
 
 // Unifies main + renderer console output and uncaught errors into this process's
 // stdout (and <userData>/logs/main.log) so debugging never needs a screenshot.
@@ -58,6 +59,7 @@ app.whenReady().then(() => {
   registerStockIpcHandlers()
   registerFileIpcHandlers()
   registerHistoryIpcHandlers()
+  registerReportIpcHandlers()
 
   createWindow()
 

@@ -1,6 +1,13 @@
-import { ipcMain, dialog, BrowserWindow } from 'electron'
+import path from 'node:path'
 import { promises as fs } from 'node:fs'
-import { IPC_CHANNELS, type SaveFileRequest, type SaveFileResult } from '@shared/ipc'
+import { ipcMain, dialog, BrowserWindow } from 'electron'
+import {
+  IPC_CHANNELS,
+  type OpenFileRequest,
+  type OpenFileResult,
+  type SaveFileRequest,
+  type SaveFileResult
+} from '@shared/ipc'
 
 export function registerFileIpcHandlers(): void {
   ipcMain.handle(
@@ -18,6 +25,30 @@ export function registerFileIpcHandlers(): void {
 
       await fs.writeFile(result.filePath, req.content, 'utf-8')
       return { saved: true, filePath: result.filePath }
+    }
+  )
+
+  ipcMain.handle(
+    IPC_CHANNELS.FILE_OPEN,
+    async (event, req: OpenFileRequest): Promise<OpenFileResult> => {
+      const window = BrowserWindow.fromWebContents(event.sender)
+      const result = window
+        ? await dialog.showOpenDialog(window, {
+            filters: req?.filters,
+            properties: ['openFile']
+          })
+        : await dialog.showOpenDialog({
+            filters: req?.filters,
+            properties: ['openFile']
+          })
+
+      if (result.canceled || result.filePaths.length === 0) {
+        return { canceled: true }
+      }
+
+      const filePath = result.filePaths[0]
+      const content = await fs.readFile(filePath, 'utf-8')
+      return { canceled: false, content, fileName: path.basename(filePath), filePath }
     }
   )
 }

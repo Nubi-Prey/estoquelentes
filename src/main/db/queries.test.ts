@@ -11,6 +11,9 @@ import {
   adjustVariantQuantity,
   getStockHistory,
   rollbackDay,
+  getMonthlySales,
+  getTopSellingVariants,
+  importStockVariants,
   type Db
 } from './queries'
 
@@ -212,5 +215,194 @@ describe('rollbackDay', () => {
     const sphere25 = getAllVariants(db).find((v) => v.sphereHundredths === 25)
     expect(sphere0?.quantity).toBe(3) // untouched, from day 1
     expect(sphere25?.quantity).toBe(0) // rolled back, was 2
+  })
+})
+
+describe('getMonthlySales and getTopSellingVariants', () => {
+  it('aggregates sales by month, counting only removals (delta < 0)', () => {
+    const db = createTestDb()
+
+    // Add stock first
+    adjustVariantQuantity(db, {
+      category: 'positive',
+      sphereHundredths: 100,
+      cylinderHundredths: -50,
+      delta: 10
+    })
+
+    // Date in August 2026
+    const augTime = new Date(2026, 7, 10, 12, 0, 0).getTime()
+    adjustVariantQuantity(db, {
+      category: 'positive',
+      sphereHundredths: 100,
+      cylinderHundredths: -50,
+      delta: -3
+    })
+    backdateLastHistoryEntry(db, augTime)
+
+    // Date in September 2026
+    const sepTime = new Date(2026, 8, 15, 12, 0, 0).getTime()
+    adjustVariantQuantity(db, {
+      category: 'positive',
+      sphereHundredths: 100,
+      cylinderHundredths: -50,
+      delta: -2
+    })
+    backdateLastHistoryEntry(db, sepTime)
+
+    const sales = getMonthlySales(db)
+    expect(sales).toHaveLength(2)
+
+    const sepSale = sales.find((s) => s.monthKey === '2026-09')
+    const augSale = sales.find((s) => s.monthKey === '2026-08')
+
+    expect(sepSale?.totalSold).toBe(2)
+    expect(sepSale?.transactionCount).toBe(1)
+    expect(augSale?.totalSold).toBe(3)
+    expect(augSale?.transactionCount).toBe(1)
+  })
+
+  it('ranks top-selling variants in descending order of units sold', () => {
+    const db = createTestDb()
+
+    adjustVariantQuantity(db, {
+      category: 'positive',
+      sphereHundredths: 100,
+      cylinderHundredths: 0,
+      delta: 10
+    })
+    adjustVariantQuantity(db, {
+      category: 'positive',
+      sphereHundredths: 200,
+      cylinderHundredths: 0,
+      delta: 10
+    })
+
+    // Sell 4 units of +2.00
+    adjustVariantQuantity(db, {
+      category: 'positive',
+      sphereHundredths: 200,
+      cylinderHundredths: 0,
+      delta: -4
+    })
+    // Sell 1 unit of +1.00
+    adjustVariantQuantity(db, {
+      category: 'positive',
+      sphereHundredths: 100,
+      cylinderHundredths: 0,
+      delta: -1
+    })
+
+    const topAll = getTopSellingVariants(db)
+    expect(topAll).toHaveLength(2)
+    expect(topAll[0].sphereHundredths).toBe(200)
+    expect(topAll[0].totalSold).toBe(4)
+    expect(topAll[1].sphereHundredths).toBe(100)
+    expect(topAll[1].totalSold).toBe(1)
+  })
+
+  it('filters top sellers by monthKey when provided', () => {
+    const db = createTestDb()
+
+    adjustVariantQuantity(db, {
+      category: 'positive',
+      sphereHundredths: 100,
+      cylinderHundredths: 0,
+      delta: 10
+    })
+
+    const augTime = new Date(2026, 7, 10, 12, 0, 0).getTime()
+    adjustVariantQuantity(db, {
+      category: 'positive',
+      sphereHundredths: 100,
+      cylinderHundredths: 0,
+      delta: -5
+    })
+    backdateLastHistoryEntry(db, augTime)
+
+    expect(getTopSellingVariants(db, '2026-08')).toHaveLength(1)
+    expect(getTopSellingVariants(db, '2026-09')).toHaveLength(0)
+  })
+})
+
+describe('importStockVariants', () => {
+  it('merges stock by adding quantities to existing and inserting new variants', () => {
+    const db = createTestDb()
+
+    adjustVariantQuantity(db, {
+      category: 'positive',
+      sphereHundredths: 100,
+      cylinderHundredths: 0,
+      delta: 2
+    })
+
+    const result = importStockVariants(db, {
+      mode: 'merge',
+      items: [
+        { category: 'positive', sphereHundredths: 100, cylinderHundredths: 0, quantity: 3 },
+        { category: 'negative', sphereHundredths: -50, cylinderHundredths: -25, quantity: 4 }
+      ]
+    })
+
+    expect(result.success).toBe(true)
+    expect(result.importedCount).toBe(2)
+
+    const variants = getAllVariants(db)
+    const pos = variants.find((v) => v.category === 'positive' && v.sphereHundredths === 100)
+    const neg = variants.find((v) => v.category === 'negative' && v.sphereHundredths === -50)
+
+    expect(pos?.quantity).toBe(5) // 2 + 3
+    expect(neg?.quantity).toBe(4)
+
+    const history = getStockHistory(db)
+    const importHistory = history.filter((h) => h.source === 'import')
+    expect(importHistory.length).toBeGreaterThanOrEqual(2)
+  })
+
+  it('replaces stock by overwriting quantities and resetting absent existing variants to 0', () => {
+    const db = createTestDb()
+
+    adjustVariantQuantity(db, {
+      category: 'positive',
+      sphereHundredths: 100,
+      cylinderHundredths: 0,
+      delta: 5
+    })
+    adjustVariantQuantity(db, {
+      category: 'positive',
+      sphereHundredths: 200,
+      cylinderHundredths: 0,
+      delta: 8
+    })
+
+    // Import only specifies +1.00 with quantity 3. +2.00 is absent and should become 0.
+    const result = importStockVariants(db, {
+      mode: 'replace',
+      items: [{ category: 'positive', sphereHundredths: 100, cylinderHundredths: 0, quantity: 3 }]
+    })
+
+    expect(result.success).toBe(true)
+    const variants = getAllVariants(db)
+    const v100 = variants.find((v) => v.sphereHundredths === 100)
+    const v200 = variants.find((v) => v.sphereHundredths === 200)
+
+    expect(v100?.quantity).toBe(3)
+    expect(v200?.quantity).toBe(0)
+  })
+
+  it('rejects invalid diopters and returns an error message without changing database', () => {
+    const db = createTestDb()
+
+    const result = importStockVariants(db, {
+      mode: 'merge',
+      items: [
+        // 13 is not a quarter step
+        { category: 'positive', sphereHundredths: 13, cylinderHundredths: 0, quantity: 2 }
+      ]
+    })
+
+    expect(result.success).toBe(false)
+    expect(result.error).toContain('0.25')
+    expect(getAllVariants(db)).toHaveLength(0)
   })
 })

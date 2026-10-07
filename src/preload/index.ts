@@ -8,19 +8,30 @@ import {
   type SaveFileRequest,
   type SaveFileResult,
   type StockHistoryEntry,
-  type RollbackDayRequest
+  type RollbackDayRequest,
+  type ImportStockRequest,
+  type ImportStockResult,
+  type OpenFileRequest,
+  type OpenFileResult,
+  type SalesReportResponse
 } from '@shared/ipc'
 
 const api = {
   getAllStock: (): Promise<StockVariant[]> => ipcRenderer.invoke(IPC_CHANNELS.STOCK_GET_ALL),
   adjustQuantity: (req: AdjustQuantityRequest): Promise<StockVariant> =>
     ipcRenderer.invoke(IPC_CHANNELS.STOCK_ADJUST_QUANTITY, req),
+  importStock: (req: ImportStockRequest): Promise<ImportStockResult> =>
+    ipcRenderer.invoke(IPC_CHANNELS.STOCK_IMPORT, req),
   saveFile: (req: SaveFileRequest): Promise<SaveFileResult> =>
     ipcRenderer.invoke(IPC_CHANNELS.FILE_SAVE, req),
+  openFile: (req?: OpenFileRequest): Promise<OpenFileResult> =>
+    ipcRenderer.invoke(IPC_CHANNELS.FILE_OPEN, req),
   getStockHistory: (): Promise<StockHistoryEntry[]> =>
     ipcRenderer.invoke(IPC_CHANNELS.HISTORY_GET_ALL),
   rollbackDay: (req: RollbackDayRequest): Promise<void> =>
-    ipcRenderer.invoke(IPC_CHANNELS.HISTORY_ROLLBACK_DAY, req)
+    ipcRenderer.invoke(IPC_CHANNELS.HISTORY_ROLLBACK_DAY, req),
+  getSalesReport: (req?: { monthKey?: string }): Promise<SalesReportResponse> =>
+    ipcRenderer.invoke(IPC_CHANNELS.REPORT_GET_SALES, req)
 }
 
 if (process.contextIsolated) {
