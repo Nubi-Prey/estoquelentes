@@ -59,14 +59,15 @@ Detalhes de arquitetura, modelo de domínio (esférico/cilindro, formato do cód
 
 ## Status atual
 
-**Implementado (MVP):** navegação lateral com quatro seções.
+**Implementado:** navegação lateral com quatro seções completas.
 
-- **Inventário** — matriz esférico×cilindro com visualização/edição, grade completa sempre visível (mesmo sem estoque), toggle de categoria positivo/negativo, status colorido por célula contra uma meta de estoque ajustável, leitura de código de barras (adicionar ou remover), cadastro manual de nova lente, crescimento dinâmico de linhas/colunas, auto-save imediato.
-- **Relatório** — exportação de lista de compras (texto ou JSON) das lentes abaixo da meta, e exportação do estoque completo (JSON ou SQL).
-- **Registro de auditoria** — toda alteração de estoque fica registrada, agrupada por dia, com rollback por dia (reversível só com confirmação).
-- **Configurações** — alternância de tema claro/escuro.
+- **Inventário** — matriz esférico×cilindro com visualização/edição, grade completa sempre visível (mesmo sem estoque), toggle de categoria positivo/negativo, status colorido por célula contra uma meta de estoque ajustável, leitura de código de barras (adicionar ou remover) com atalho de teclado `F2`, cadastro manual de nova lente, crescimento dinâmico de linhas/colunas, auto-save imediato.
+- **Relatório** — métricas de vendas mensais (total de saídas, modelos distintos) com seletor de mês, ranking com barras visuais das lentes mais vendidas no período, exportação de lista de compras (texto ou JSON) para itens abaixo da meta, exportação do estoque completo (JSON ou SQL) e importação de estoque (JSON ou SQL) nos modos _Mesclar_ ou _Substituir_.
+- **Registro de auditoria** — toda alteração de estoque fica registrada com a origem (`manual`, `barcode`, `import`), agrupada por dia, com rollback por dia (reversível só com confirmação).
+- **Configurações** — alternância de tema claro/escuro persistido em storage local.
+- **Testes & Confiabilidade** — 100% dos testes unitários e de componentes passando, além de testes de fumaça (smoke tests) que executam o binário real do Electron e SQLite nativo.
 
-**Ainda fora do escopo:** relatório de lentes mais vendidas (as ferramentas de exportação já existem, os dados de vendas ainda não), importação de estoque, desfazer um rollback. Veja [`EstoqueLentes.md`](./EstoqueLentes.md) para o spec original completo.
+**Ainda fora do escopo:** desfazer um rollback (por especificação original, o rollback desfaz e remove os registros do dia). Veja [`EstoqueLentes.md`](./EstoqueLentes.md) para o spec original completo.
 
 ## Licença
 

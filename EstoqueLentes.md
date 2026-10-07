@@ -29,14 +29,15 @@ A tabela deve aumentar modularmente, há medida que o estoque sobe(por exemplo, 
 
 Criação de um sistema de registro, com histórico de adição/remoção de lentes e as datas
 
-Ferramentas:
-Importar um estoque (JSON, ou arquivo SQL)
-Exportar um estoque (JSON, ou arquivo SQL)
-Exportar uma lista de compras com uma meta ajustavel(em JSON e/ou texto normal)
-Rollback para um estado antigo(integração com os registros. Se adicionado X, remova X)
-Relatório de lentes mais vendidas/quantidade vendida por mês
-Adição e remoção de lentes via tabela interativa(view mode / edit mode)
-Adição e remoção de lentes via código de barras
+Ferramentas (100% implementadas):
+
+- [x] Importar um estoque (JSON, ou arquivo SQL)
+- [x] Exportar um estoque (JSON, ou arquivo SQL)
+- [x] Exportar uma lista de compras com uma meta ajustavel(em JSON e/ou texto normal)
+- [x] Rollback para um estado antigo(integração com os registros. Se adicionado X, remova X)
+- [x] Relatório de lentes mais vendidas/quantidade vendida por mês
+- [x] Adição e remoção de lentes via tabela interativa(view mode / edit mode)
+- [x] Adição e remoção de lentes via código de barras
 
 Para o código de barras, use esta logica:
 
