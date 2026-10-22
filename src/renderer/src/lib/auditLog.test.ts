@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  filterAuditDays,
   formatAuditEntryLens,
   formatDayLabel,
   formatNetMovement,
@@ -92,5 +93,93 @@ describe('formatAuditEntryLens', () => {
     expect(formatAuditEntryLens(entry({ sphereHundredths: 125, cylinderHundredths: -25 }))).toBe(
       'Lente ESF: +1.25, CIL: -0.25'
     )
+  })
+})
+
+describe('filterAuditDays', () => {
+  const now = new Date(2026, 9, 21, 12, 0).getTime() // 2026-10-21 (Hoje)
+
+  const days = [
+    {
+      dayKey: '2026-10-21',
+      dayStartMs: 0,
+      dayEndMs: 0,
+      entries: [],
+      added: 2,
+      removed: 1
+    },
+    {
+      dayKey: '2026-10-20',
+      dayStartMs: 0,
+      dayEndMs: 0,
+      entries: [],
+      added: 0,
+      removed: 3
+    },
+    {
+      dayKey: '2026-08-15',
+      dayStartMs: 0,
+      dayEndMs: 0,
+      entries: [],
+      added: 5,
+      removed: 0
+    },
+    {
+      dayKey: '2025-03-10',
+      dayStartMs: 0,
+      dayEndMs: 0,
+      entries: [],
+      added: 1,
+      removed: 1
+    }
+  ]
+
+  it('returns all days when search is empty or whitespace', () => {
+    expect(filterAuditDays(days, '', now)).toHaveLength(4)
+    expect(filterAuditDays(days, '   ', now)).toHaveLength(4)
+  })
+
+  it('filters by relative labels like "hoje" or "ontem"', () => {
+    const hoje = filterAuditDays(days, 'hoje', now)
+    expect(hoje).toHaveLength(1)
+    expect(hoje[0].dayKey).toBe('2026-10-21')
+
+    const ontem = filterAuditDays(days, 'ontem', now)
+    expect(ontem).toHaveLength(1)
+    expect(ontem[0].dayKey).toBe('2026-10-20')
+  })
+
+  it('filters by month name (case and accent insensitive)', () => {
+    const outubro = filterAuditDays(days, 'outubro', now)
+    expect(outubro).toHaveLength(2)
+    expect(outubro.map((d) => d.dayKey)).toEqual(['2026-10-21', '2026-10-20'])
+
+    const marco = filterAuditDays(days, 'março', now)
+    expect(marco).toHaveLength(1)
+    expect(marco[0].dayKey).toBe('2025-03-10')
+
+    const marcoNoAccent = filterAuditDays(days, 'marco', now)
+    expect(marcoNoAccent).toHaveLength(1)
+  })
+
+  it('filters by date representations (DD/MM, YYYY-MM, YYYY-MM-DD)', () => {
+    expect(filterAuditDays(days, '21/10', now)).toHaveLength(1)
+    expect(filterAuditDays(days, '2026-08', now)).toHaveLength(1)
+    expect(filterAuditDays(days, '2026-10-21', now)).toHaveLength(1)
+  })
+
+  it('filters by year', () => {
+    expect(filterAuditDays(days, '2025', now)).toHaveLength(1)
+    expect(filterAuditDays(days, '2026', now)).toHaveLength(3)
+  })
+
+  it('filters by specific day number', () => {
+    expect(filterAuditDays(days, '15', now)).toHaveLength(1)
+    expect(filterAuditDays(days, '15', now)[0].dayKey).toBe('2026-08-15')
+  })
+
+  it('returns empty array when no day matches', () => {
+    expect(filterAuditDays(days, 'dezembro', now)).toHaveLength(0)
+    expect(filterAuditDays(days, '2024-01-01', now)).toHaveLength(0)
   })
 })

@@ -49,11 +49,22 @@ interface UseStockResult {
   variants: StockVariant[]
   loading: boolean
   adjust: (req: AdjustQuantityRequest) => Promise<void>
+  refetch: () => Promise<void>
 }
 
 export function useStock(): UseStockResult {
   const [variants, setVariants] = useState<StockVariant[]>([])
   const [loading, setLoading] = useState(true)
+
+  const refetch = useCallback(async (): Promise<void> => {
+    setLoading(true)
+    try {
+      const data = await window.api.getAllStock()
+      setVariants(data)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
     window.api.getAllStock().then((data) => {
@@ -73,5 +84,5 @@ export function useStock(): UseStockResult {
     }
   }, [])
 
-  return { variants, loading, adjust }
+  return { variants, loading, adjust, refetch }
 }

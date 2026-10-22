@@ -13,7 +13,12 @@ import {
   type ImportStockResult,
   type OpenFileRequest,
   type OpenFileResult,
-  type SalesReportResponse
+  type SalesReportRequest,
+  type SalesReportResponse,
+  type BackupDatabaseResult,
+  type RestoreDatabaseResult,
+  type OpenDataFolderResult,
+  type DataPathResult
 } from '@shared/ipc'
 
 const api = {
@@ -30,8 +35,15 @@ const api = {
     ipcRenderer.invoke(IPC_CHANNELS.HISTORY_GET_ALL),
   rollbackDay: (req: RollbackDayRequest): Promise<void> =>
     ipcRenderer.invoke(IPC_CHANNELS.HISTORY_ROLLBACK_DAY, req),
-  getSalesReport: (req?: { monthKey?: string }): Promise<SalesReportResponse> =>
-    ipcRenderer.invoke(IPC_CHANNELS.REPORT_GET_SALES, req)
+  getSalesReport: (req?: SalesReportRequest): Promise<SalesReportResponse> =>
+    ipcRenderer.invoke(IPC_CHANNELS.REPORT_GET_SALES, req),
+  backupDatabase: (): Promise<BackupDatabaseResult> =>
+    ipcRenderer.invoke(IPC_CHANNELS.STORAGE_BACKUP_DATABASE),
+  restoreDatabase: (): Promise<RestoreDatabaseResult> =>
+    ipcRenderer.invoke(IPC_CHANNELS.STORAGE_RESTORE_DATABASE),
+  openDataFolder: (): Promise<OpenDataFolderResult> =>
+    ipcRenderer.invoke(IPC_CHANNELS.STORAGE_OPEN_DATA_FOLDER),
+  getDataPath: (): Promise<DataPathResult> => ipcRenderer.invoke(IPC_CHANNELS.STORAGE_GET_DATA_PATH)
 }
 
 if (process.contextIsolated) {

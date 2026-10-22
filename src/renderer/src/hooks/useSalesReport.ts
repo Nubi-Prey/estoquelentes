@@ -1,11 +1,17 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { MonthlySalesSummary, TopSellingVariant } from '@shared/ipc'
 
-interface UseSalesReportResult {
+export interface UseSalesReportResult {
   monthlySummary: MonthlySalesSummary[]
   topSellers: TopSellingVariant[]
-  selectedMonth: string
-  setSelectedMonth: (month: string) => void
+  selectedDate: string
+  setSelectedDate: (date: string) => void
+  endDate: string
+  setEndDate: (date: string) => void
+  summary?: {
+    totalSold: number
+    totalAdded: number
+  }
   loading: boolean
   refetch: () => Promise<void>
 }
@@ -13,38 +19,51 @@ interface UseSalesReportResult {
 export function useSalesReport(): UseSalesReportResult {
   const [monthlySummary, setMonthlySummary] = useState<MonthlySalesSummary[]>([])
   const [topSellers, setTopSellers] = useState<TopSellingVariant[]>([])
-  const [selectedMonth, setSelectedMonth] = useState<string>('')
+  const [summary, setSummary] = useState<{ totalSold: number; totalAdded: number } | undefined>()
+  const [selectedDate, setSelectedDate] = useState<string>('')
+  const [endDate, setEndDate] = useState<string>('')
   const [loading, setLoading] = useState(true)
+
+  const buildRequest = useCallback(() => {
+    if (selectedDate && endDate) {
+      return { startDate: selectedDate, endDate }
+    }
+    if (selectedDate) {
+      return { periodKey: selectedDate }
+    }
+    return undefined
+  }, [selectedDate, endDate])
 
   useEffect(() => {
     let active = true
-    window.api
-      .getSalesReport(selectedMonth ? { monthKey: selectedMonth } : undefined)
-      .then((res) => {
-        if (!active) return
-        setMonthlySummary(res.monthlySummary)
-        setTopSellers(res.topSellers)
-        setLoading(false)
-      })
+    window.api.getSalesReport(buildRequest()).then((res) => {
+      if (!active) return
+      setMonthlySummary(res.monthlySummary)
+      setTopSellers(res.topSellers)
+      setSummary(res.summary)
+      setLoading(false)
+    })
     return () => {
       active = false
     }
-  }, [selectedMonth])
+  }, [buildRequest])
 
   const refetch = useCallback(async () => {
-    const res = await window.api.getSalesReport(
-      selectedMonth ? { monthKey: selectedMonth } : undefined
-    )
+    const res = await window.api.getSalesReport(buildRequest())
     setMonthlySummary(res.monthlySummary)
     setTopSellers(res.topSellers)
+    setSummary(res.summary)
     setLoading(false)
-  }, [selectedMonth])
+  }, [buildRequest])
 
   return {
     monthlySummary,
     topSellers,
-    selectedMonth,
-    setSelectedMonth,
+    selectedDate,
+    setSelectedDate,
+    endDate,
+    setEndDate,
+    summary,
     loading,
     refetch
   }

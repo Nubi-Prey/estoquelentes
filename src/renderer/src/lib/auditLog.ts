@@ -88,3 +88,50 @@ export function formatAuditEntryTime(entry: StockHistoryEntry): string {
     minute: '2-digit'
   })
 }
+
+export function filterAuditDays(
+  days: AuditDay[],
+  searchTerm: string,
+  now: number = Date.now()
+): AuditDay[] {
+  const trimmed = searchTerm.trim().toLowerCase()
+  if (!trimmed) return days
+
+  const normalize = (s: string): string =>
+    s
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+
+  const normTerm = normalize(trimmed)
+
+  return days.filter((day) => {
+    const dayKey = day.dayKey.toLowerCase()
+    const [year, month, dayNum] = dayKey.split('-')
+    if (!year || !month || !dayNum) return false
+
+    const ptDate = `${dayNum}/${month}/${year}`
+    const ptShort = `${dayNum}/${month}`
+    const monthYear = `${month}/${year}`
+    const yearMonth = `${year}-${month}`
+
+    const dateObj = new Date(Number(year), Number(month) - 1, Number(dayNum))
+    const fullMonthName = dateObj.toLocaleDateString('pt-BR', { month: 'long' })
+    const label = formatDayLabel(day.dayKey, now)
+
+    const candidates = [
+      dayKey,
+      ptDate,
+      ptShort,
+      monthYear,
+      yearMonth,
+      fullMonthName,
+      label,
+      dayNum,
+      month,
+      year
+    ].map(normalize)
+
+    return candidates.some((c) => c.includes(normTerm))
+  })
+}

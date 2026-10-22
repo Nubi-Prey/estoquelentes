@@ -1,4 +1,5 @@
-import { and, desc, eq, gte, lt, sql } from 'drizzle-orm'
+import Database from 'better-sqlite3'
+import { and, desc, eq, gte, lt, sql, type SQL } from 'drizzle-orm'
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3'
 import { lensVariants, stockHistory, type LensVariant } from './schema'
 import type * as schema from './schema'
@@ -17,7 +18,7 @@ import type {
 // Business logic takes the db instance as a parameter (instead of importing the
 // singleton from client.ts, which needs Electron's `app`) so it can be exercised
 // from a plain Vitest/Node script — see queries.test.ts — without booting Electron.
-export type Db = BetterSQLite3Database<typeof schema>
+export type Db = BetterSQLite3Database<typeof schema> & { $client: Database.Database }
 
 export function getAllVariants(db: Db): LensVariant[] {
   return db.select().from(lensVariants).all()
@@ -138,13 +139,18 @@ export function rollbackDay(db: Db, { dayStartMs, dayEndMs }: RollbackDayRequest
 }
 
 export function getMonthlySales(db: Db): MonthlySalesSummary[] {
-  const rows = db.all<{ monthKey: string; totalSold: number; transactionCount: number }>(sql`
+  const rows = db.all<{
+    monthKey: string
+    totalSold: number
+    totalAdded: number
+    transactionCount: number
+  }>(sql`
     SELECT
       strftime('%Y-%m', ${stockHistory.createdAt} / 1000, 'unixepoch', 'localtime') AS monthKey,
-      SUM(ABS(${stockHistory.delta})) AS totalSold,
-      COUNT(*) AS transactionCount
+      SUM(CASE WHEN ${stockHistory.delta} < 0 THEN ABS(${stockHistory.delta}) ELSE 0 END) AS totalSold,
+      SUM(CASE WHEN ${stockHistory.delta} > 0 THEN ${stockHistory.delta} ELSE 0 END) AS totalAdded,
+      COUNT(CASE WHEN ${stockHistory.delta} < 0 THEN 1 END) AS transactionCount
     FROM ${stockHistory}
-    WHERE ${stockHistory.delta} < 0
     GROUP BY monthKey
     ORDER BY monthKey DESC
   `)
@@ -152,50 +158,88 @@ export function getMonthlySales(db: Db): MonthlySalesSummary[] {
   return rows.map((r) => ({
     monthKey: String(r.monthKey),
     totalSold: Number(r.totalSold) || 0,
+    totalAdded: Number(r.totalAdded) || 0,
     transactionCount: Number(r.transactionCount) || 0
   }))
 }
 
+export interface SalesDateFilter {
+  periodKey?: string
+  startDate?: string
+  endDate?: string
+}
+
+function buildDateCondition(filter?: string | SalesDateFilter): SQL {
+  if (!filter) return sql`1 = 1`
+
+  const opts: SalesDateFilter = typeof filter === 'string' ? { periodKey: filter } : filter
+
+  if (opts.startDate && opts.endDate) {
+    return sql`strftime('%Y-%m-%d', ${stockHistory.createdAt} / 1000, 'unixepoch', 'localtime') BETWEEN ${opts.startDate} AND ${opts.endDate}`
+  }
+  if (opts.startDate) {
+    return sql`strftime('%Y-%m-%d', ${stockHistory.createdAt} / 1000, 'unixepoch', 'localtime') = ${opts.startDate}`
+  }
+  if (opts.periodKey) {
+    if (opts.periodKey.length === 10) {
+      return sql`strftime('%Y-%m-%d', ${stockHistory.createdAt} / 1000, 'unixepoch', 'localtime') = ${opts.periodKey}`
+    }
+    if (opts.periodKey.length === 7) {
+      return sql`strftime('%Y-%m', ${stockHistory.createdAt} / 1000, 'unixepoch', 'localtime') = ${opts.periodKey}`
+    }
+    if (opts.periodKey.length === 4) {
+      return sql`strftime('%Y', ${stockHistory.createdAt} / 1000, 'unixepoch', 'localtime') = ${opts.periodKey}`
+    }
+  }
+
+  return sql`1 = 1`
+}
+
+export function getSalesSummary(
+  db: Db,
+  filter?: string | SalesDateFilter
+): { totalSold: number; totalAdded: number } {
+  const dateCond = buildDateCondition(filter)
+  const row = db.get<{ totalSold: number; totalAdded: number }>(sql`
+    SELECT
+      SUM(CASE WHEN ${stockHistory.delta} < 0 THEN ABS(${stockHistory.delta}) ELSE 0 END) AS totalSold,
+      SUM(CASE WHEN ${stockHistory.delta} > 0 THEN ${stockHistory.delta} ELSE 0 END) AS totalAdded
+    FROM ${stockHistory}
+    WHERE ${dateCond}
+  `)
+
+  return {
+    totalSold: Number(row?.totalSold) || 0,
+    totalAdded: Number(row?.totalAdded) || 0
+  }
+}
+
 export function getTopSellingVariants(
   db: Db,
-  monthKey?: string,
+  filter?: string | SalesDateFilter,
   limit: number = 10
 ): TopSellingVariant[] {
-  const query = monthKey
-    ? sql`
-        SELECT
-          ${lensVariants.category} AS category,
-          ${lensVariants.sphereHundredths} AS sphereHundredths,
-          ${lensVariants.cylinderHundredths} AS cylinderHundredths,
-          SUM(ABS(${stockHistory.delta})) AS totalSold
-        FROM ${stockHistory}
-        INNER JOIN ${lensVariants} ON ${stockHistory.variantId} = ${lensVariants.id}
-        WHERE ${stockHistory.delta} < 0
-          AND strftime('%Y-%m', ${stockHistory.createdAt} / 1000, 'unixepoch', 'localtime') = ${monthKey}
-        GROUP BY ${lensVariants.category}, ${lensVariants.sphereHundredths}, ${lensVariants.cylinderHundredths}
-        ORDER BY totalSold DESC
-        LIMIT ${limit}
-      `
-    : sql`
-        SELECT
-          ${lensVariants.category} AS category,
-          ${lensVariants.sphereHundredths} AS sphereHundredths,
-          ${lensVariants.cylinderHundredths} AS cylinderHundredths,
-          SUM(ABS(${stockHistory.delta})) AS totalSold
-        FROM ${stockHistory}
-        INNER JOIN ${lensVariants} ON ${stockHistory.variantId} = ${lensVariants.id}
-        WHERE ${stockHistory.delta} < 0
-        GROUP BY ${lensVariants.category}, ${lensVariants.sphereHundredths}, ${lensVariants.cylinderHundredths}
-        ORDER BY totalSold DESC
-        LIMIT ${limit}
-      `
+  const dateCond = buildDateCondition(filter)
 
   const rows = db.all<{
     category: LensCategory
     sphereHundredths: number
     cylinderHundredths: number
     totalSold: number
-  }>(query)
+  }>(sql`
+    SELECT
+      ${lensVariants.category} AS category,
+      ${lensVariants.sphereHundredths} AS sphereHundredths,
+      ${lensVariants.cylinderHundredths} AS cylinderHundredths,
+      SUM(ABS(${stockHistory.delta})) AS totalSold
+    FROM ${stockHistory}
+    INNER JOIN ${lensVariants} ON ${stockHistory.variantId} = ${lensVariants.id}
+    WHERE ${stockHistory.delta} < 0
+      AND ${dateCond}
+    GROUP BY ${lensVariants.category}, ${lensVariants.sphereHundredths}, ${lensVariants.cylinderHundredths}
+    ORDER BY totalSold DESC
+    LIMIT ${limit}
+  `)
 
   return rows.map((r) => ({
     category: r.category,
@@ -331,5 +375,29 @@ export function importStockVariants(db: Db, req: ImportStockRequest): ImportStoc
       importedCount: 0,
       error: err instanceof Error ? err.message : 'Erro ao importar estoque.'
     }
+  }
+}
+
+export async function backupDatabase(db: Db, destinationPath: string): Promise<void> {
+  await db.$client.backup(destinationPath)
+}
+
+export async function restoreDatabase(
+  destLivePath: string,
+  backupSourcePath: string
+): Promise<void> {
+  const source = new Database(backupSourcePath, { readonly: true })
+  try {
+    const hasLensVariants = source
+      .prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'lens_variants'")
+      .get()
+    if (!hasLensVariants) {
+      throw new Error(
+        'O arquivo selecionado não é um backup válido do EstoqueLentes (tabela lens_variants não encontrada).'
+      )
+    }
+    await source.backup(destLivePath)
+  } finally {
+    source.close()
   }
 }

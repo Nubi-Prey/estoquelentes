@@ -6,7 +6,11 @@ export const IPC_CHANNELS = {
   FILE_OPEN: 'file:open',
   HISTORY_GET_ALL: 'history:get-all',
   HISTORY_ROLLBACK_DAY: 'history:rollback-day',
-  REPORT_GET_SALES: 'report:get-sales'
+  REPORT_GET_SALES: 'report:get-sales',
+  STORAGE_BACKUP_DATABASE: 'storage:backup-database',
+  STORAGE_RESTORE_DATABASE: 'storage:restore-database',
+  STORAGE_OPEN_DATA_FOLDER: 'storage:open-data-folder',
+  STORAGE_GET_DATA_PATH: 'storage:get-data-path'
 } as const
 
 export type LensCategory = 'positive' | 'negative'
@@ -76,7 +80,15 @@ export interface OpenFileResult {
 export interface MonthlySalesSummary {
   monthKey: string
   totalSold: number
+  totalAdded: number
   transactionCount: number
+}
+
+export interface SalesReportRequest {
+  periodKey?: string
+  startDate?: string
+  endDate?: string
+  monthKey?: string
 }
 
 export interface TopSellingVariant {
@@ -89,6 +101,10 @@ export interface TopSellingVariant {
 export interface SalesReportResponse {
   monthlySummary: MonthlySalesSummary[]
   topSellers: TopSellingVariant[]
+  summary?: {
+    totalSold: number
+    totalAdded: number
+  }
 }
 
 export interface ImportVariantItem {
@@ -107,4 +123,28 @@ export interface ImportStockResult {
   success: boolean
   importedCount: number
   error?: string
+}
+
+export interface BackupDatabaseResult {
+  success: boolean
+  canceled?: boolean
+  filePath?: string
+  error?: string
+}
+
+export interface RestoreDatabaseResult {
+  success: boolean
+  canceled?: boolean
+  filePath?: string
+  error?: string
+}
+
+export interface OpenDataFolderResult {
+  success: boolean
+  error?: string
+}
+
+export interface DataPathResult {
+  userDataPath: string
+  dbPath: string
 }
