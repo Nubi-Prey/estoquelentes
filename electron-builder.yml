@@ -1,7 +1,9 @@
 appId: com.estoquelentes.app
-productName: estoquelentes
+productName: EstoqueLentes
+copyright: Copyright © 2026 Murilo Alves
 directories:
   buildResources: build
+  output: dist
 files:
   - '!**/.vscode/*'
   - '!src/*'
@@ -16,19 +18,53 @@ extraResources:
     to: drizzle
 win:
   executableName: estoquelentes
+  icon: build/icon.ico
+  artifactName: EstoqueLentes-Windows-Setup-x64.${ext}
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: portable
+      arch:
+        - x64
 nsis:
-  artifactName: ${name}-${version}-setup.${ext}
-  shortcutName: ${productName}
-  uninstallDisplayName: ${productName}
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  perMachine: false
   createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: EstoqueLentes
+  uninstallDisplayName: EstoqueLentes
+  deleteAppDataOnUninstall: false
+  runAfterFinish: true
+  artifactName: EstoqueLentes-Windows-Setup-x64.${ext}
+portable:
+  artifactName: EstoqueLentes-Windows-Portable-x64.${ext}
 mac:
   entitlementsInherit: build/entitlements.mac.plist
   notarize: false
 dmg:
-  artifactName: ${name}-${version}.${ext}
+  artifactName: EstoqueLentes-macOS.${ext}
 linux:
+  executableName: estoquelentes
+  syncDesktopName: true
+  icon: build/icon.png
+  category: Office
+  synopsis: Gerenciador de estoque de lentes para ótica
+  description: Gerenciador local de estoque de blocos de lentes oftálmicas com matriz esférico x cilindro e controle de código de barras
+  artifactName: EstoqueLentes-Linux-x86_64.${ext}
   target:
-    - AppImage
+    - target: AppImage
+      arch:
+        - x64
+    - target: deb
+      arch:
+        - x64
+    - target: tar.xz
+      arch:
+        - x64
 appImage:
-  artifactName: ${name}-${version}.${ext}
+  artifactName: EstoqueLentes-Linux-x86_64.${ext}
+deb:
+  artifactName: EstoqueLentes-Linux-amd64.${ext}
 npmRebuild: false

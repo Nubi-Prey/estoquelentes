@@ -69,6 +69,37 @@ Detalhes de arquitetura, modelo de domínio (esférico/cilindro, formato do cód
 
 **Ainda fora do escopo:** desfazer um rollback (por especificação original, o rollback desfaz e remove os registros do dia). Veja [`EstoqueLentes.md`](./EstoqueLentes.md) para o spec original completo.
 
+## Distribuição e Instalação
+
+O aplicativo é empacotado profissionalmente para **Linux** e **Windows**, seguindo padrão ouro de distribuição com esteira automatizada no GitHub Actions (`.github/workflows/build_releases.yml`):
+
+### Windows
+
+- **Instalador NSIS (`EstoqueLentes-Windows-Setup-x64.exe`)**: assistente de instalação com escolha de diretório, atalhos na Área de Trabalho e Menu Iniciar, sem privilégios de administrador obrigatórios (`perMachine: false`) e proteção de dados que **nunca apaga o banco SQLite** ao atualizar ou desinstalar (`deleteAppDataOnUninstall: false`).
+- **Portátil (`EstoqueLentes-Windows-Portable-x64.exe`)**: executável independente pronto para rodar direto sem instalação.
+- **Arquivo Portátil ZIP (`EstoqueLentes-Windows-Portable-x64.zip`)**: pasta compactada para extração imediata sem overhead temporário.
+
+### Linux
+
+- **AppImage (`EstoqueLentes-Linux-x86_64.AppImage`)**: executável universal portátil que roda em qualquer distribuição Linux sem necessidade de `root`.
+- **Pacote DEB (`EstoqueLentes-Linux-amd64.deb`)**: integrado para Ubuntu, Debian, Linux Mint e Pop!_OS, com atalho no menu de aplicativos (`Office`) e ícones do sistema.
+- **Tarball Portátil (`EstoqueLentes-Linux-x86_64.tar.xz`)**: arquivo ultra-compactado com LZMA para uso em distribuições sem dependência de FUSE.
+
+### Integridade e Checksums
+
+Toda release pública acompanha o arquivo `SHA256SUMS.txt` na raiz, permitindo validação direta com:
+
+```bash
+sha256sum -c SHA256SUMS.txt
+```
+
+### Compilação Local
+
+```bash
+npm run build:linux   # Gera .AppImage, .deb e .tar.xz na pasta dist/
+npm run build:win     # Gera instalador NSIS e executável portátil na pasta dist/
+```
+
 ## Licença
 
 [MIT](./LICENSE)

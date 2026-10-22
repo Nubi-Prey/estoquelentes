@@ -26,10 +26,14 @@ describe('Electron Environment & Binary Smoke Test', () => {
     expect(typeof electronPath).toBe('string')
     expect(fs.existsSync(electronPath)).toBe(true)
 
-    const result = spawnSync(electronPath, ['--version', '--no-sandbox'], {
+    const result = spawnSync(electronPath, ['--no-sandbox', '--version'], {
       encoding: 'utf-8',
       timeout: 10000
     })
+
+    if (result.status !== 0) {
+      console.error('Electron version smoke error:', result.error, result.stderr)
+    }
 
     expect(result.status).toBe(0)
     expect(result.stdout.trim()).toMatch(/^v43\./)
@@ -53,10 +57,21 @@ describe('Electron Environment & Binary Smoke Test', () => {
     fs.writeFileSync(tmpScript, scriptCode, 'utf-8')
 
     try {
-      const result = spawnSync(electronPath, [tmpScript, '--no-sandbox'], {
+      const result = spawnSync(electronPath, ['--no-sandbox', '--disable-gpu', tmpScript], {
         encoding: 'utf-8',
-        timeout: 15000
+        timeout: 15000,
+        env: { ...process.env, ELECTRON_ENABLE_LOGGING: '1' }
       })
+
+      if (result.status !== 0) {
+        console.error(
+          'Electron lifecycle smoke error:',
+          result.error,
+          result.stderr,
+          'signal:',
+          result.signal
+        )
+      }
 
       expect(result.status).toBe(0)
       expect(result.stdout).toContain('SMOKE_LIFECYCLE_SUCCESS')
@@ -101,10 +116,21 @@ describe('Electron Environment & Binary Smoke Test', () => {
     fs.writeFileSync(tmpScript, scriptCode, 'utf-8')
 
     try {
-      const result = spawnSync(electronPath, [tmpScript, '--no-sandbox'], {
+      const result = spawnSync(electronPath, ['--no-sandbox', '--disable-gpu', tmpScript], {
         encoding: 'utf-8',
-        timeout: 15000
+        timeout: 15000,
+        env: { ...process.env, ELECTRON_ENABLE_LOGGING: '1' }
       })
+
+      if (result.status !== 0) {
+        console.error(
+          'Electron db migrations smoke error:',
+          result.error,
+          result.stderr,
+          'signal:',
+          result.signal
+        )
+      }
 
       expect(result.status).toBe(0)
       expect(result.stdout).toContain('SMOKE_DB_MIGRATIONS_SUCCESS')
@@ -118,6 +144,15 @@ describe('Electron Environment & Binary Smoke Test', () => {
     const mainJs = path.join(outDir, 'main/index.js')
     const preloadJs = path.join(outDir, 'preload/index.js')
     const rendererHtml = path.join(outDir, 'renderer/index.html')
+
+    // If out directory is missing (e.g. running test standalone before build), build it
+    if (!fs.existsSync(mainJs) || !fs.existsSync(preloadJs) || !fs.existsSync(rendererHtml)) {
+      spawnSync('npx', ['electron-vite', 'build'], {
+        cwd: path.resolve(__dirname, '../..'),
+        stdio: 'inherit',
+        shell: true
+      })
+    }
 
     expect(fs.existsSync(mainJs)).toBe(true)
     expect(fs.statSync(mainJs).size).toBeGreaterThan(1000)

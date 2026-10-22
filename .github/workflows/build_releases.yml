@@ -1,0 +1,127 @@
+name: Build and Release Desktop Apps
+
+on:
+  push:
+    tags:
+      - 'v*'
+      - '[0-9]+.[0-9]+*'
+  workflow_dispatch:
+
+jobs:
+  build-linux:
+    name: Build Linux (AppImage, DEB & Tarball)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run verification checks
+        run: |
+          npm run lint
+          npm run typecheck
+          npm run build
+          xvfb-run --auto-servernum -- npm test
+
+      - name: Build and package Linux
+        run: npm run build:linux
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Linux Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-binaries
+          if-no-files-found: warn
+          path: |
+            dist/*.AppImage
+            dist/*.deb
+            dist/*.tar.xz
+
+  build-windows:
+    name: Build Windows (Installer & Portable)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run verification checks
+        run: |
+          npm run lint
+          npm run typecheck
+          npm run build
+          npm test
+
+      - name: Build and package Windows
+        run: npm run build:win
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Windows Portable ZIP
+        shell: pwsh
+        run: |
+          if (Test-Path "dist\win-unpacked") {
+            Compress-Archive -Path "dist\win-unpacked\*" -DestinationPath "dist\EstoqueLentes-Windows-Portable-x64.zip" -CompressionLevel Optimal -Force
+            Write-Host "Created dist\EstoqueLentes-Windows-Portable-x64.zip"
+          }
+
+      - name: Upload Windows Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-binaries
+          if-no-files-found: warn
+          path: |
+            dist/*-Setup-*.exe
+            dist/*-Portable-*.exe
+            dist/*-Portable-*.zip
+
+  release:
+    name: Publish GitHub Release with Checksums
+    needs: [build-linux, build-windows]
+    if: startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/tags/1') || startsWith(github.ref, 'refs/tags/2') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          path: release_files
+
+      - name: Generate Flattened SHA256 Checksums
+        run: |
+          cd release_files
+          find . -mindepth 2 -type f -exec mv -t . {} + 2>/dev/null || true
+          rm -rf */ 2>/dev/null || true
+          rm -f *.blockmap latest*.yml 2>/dev/null || true
+          sha256sum * > SHA256SUMS.txt
+          echo "Generated SHA256SUMS.txt:"
+          cat SHA256SUMS.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release_files/*
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

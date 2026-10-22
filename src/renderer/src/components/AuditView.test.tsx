@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { AuditView } from './AuditView'
 import { createMockApi } from '@renderer/test/mockApi'
@@ -29,10 +29,16 @@ const mockEntries: StockHistoryEntry[] = [
 ]
 
 beforeEach(() => {
+  vi.useFakeTimers({ shouldAdvanceTime: true })
+  vi.setSystemTime(new Date(2026, 9, 21, 12, 0))
   window.api = createMockApi({
     getStockHistory: vi.fn().mockResolvedValue(mockEntries),
     rollbackDay: vi.fn().mockResolvedValue(undefined)
   })
+})
+
+afterEach(() => {
+  vi.useRealTimers()
 })
 
 describe('AuditView', () => {
