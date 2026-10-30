@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "2.0",
+  "id": "estoquelentes",
+  "repo": "estoquelentes",
+  "casing": "Nubi-Prey/estoquelentes",
+  "categoryKey": "desktop",
+  "badge": "ZERO CLOUD LOCK",
+  "refLabel": "ZERO CLOUD LOCK",
+  "title": "EstoqueLentes",
+  "description": "Aplicativo desktop para controle de estoque de blocos de lentes oftálmicas em matriz dióptrica 2D. Persistência local com SQLite (better-sqlite3) e Drizzle ORM, com separação de processos no Electron via IPC tipado.",
+  "icon": "https://raw.githubusercontent.com/Nubi-Prey/estoquelentes/master/docs/icon.jpeg",
+  "visitLink": "https://github.com/Nubi-Prey/estoquelentes",
+  "tags": [
+    "Electron 39",
+    "React 19",
+    "TypeScript",
+    "better-sqlite3",
+    "Drizzle ORM",
+    "Tailwind v4"
+  ],
+  "links": {
+    "github": "https://github.com/Nubi-Prey/estoquelentes",
+    "releases": "https://github.com/Nubi-Prey/estoquelentes/releases",
+    "visit": null
+  },
+  "locales": {
+    "pt_BR": {
+      "title": "EstoqueLentes",
+      "tagline": "Controle de Estoque Oftálmico em Matriz Dióptrica 2D",
+      "category": "Desktop Local-First",
+      "badge": "ZERO CLOUD LOCK",
+      "refLabel": "ZERO CLOUD LOCK",
+      "description": "Aplicativo desktop para controle de estoque de blocos de lentes oftálmicas em matriz dióptrica 2D. Persistência local com SQLite (better-sqlite3) e Drizzle ORM, com separação de processos no Electron via IPC tipado.",
+      "tags": [
+        "Electron 39",
+        "React 19",
+        "TypeScript",
+        "better-sqlite3",
+        "Drizzle ORM",
+        "Tailwind v4"
+      ],
+      "highlights": [
+        "Banco SQLite local com better-sqlite3 e Drizzle ORM, executando migrações em menos de 2ms",
+        "Separação de processos no Electron (Main, Preload, Renderer) via IPC tipado",
+        "Navegação em matriz 2D (Esférico × Cilíndrico) com leitura direta de código de barras USB"
+      ]
+    },
+    "en_US": {
+      "title": "EstoqueLentes",
+      "tagline": "2D Dioptric Matrix Inventory Control for Optical Lenses",
+      "category": "Desktop Local-First",
+      "badge": "ZERO CLOUD LOCK",
+      "refLabel": "ZERO CLOUD LOCK",
+      "description": "Desktop inventory manager for optical lens blanks using a 2D dioptric matrix. Local persistence with SQLite (better-sqlite3) and Drizzle ORM, using Electron process separation over typed IPC.",
+      "tags": [
+        "Electron 39",
+        "React 19",
+        "TypeScript",
+        "better-sqlite3",
+        "Drizzle ORM",
+        "Tailwind v4"
+      ],
+      "highlights": [
+        "Embedded SQLite database with better-sqlite3 and Drizzle ORM, running migrations in under 2ms",
+        "Three-process Electron architecture (Main, Preload, Renderer) communicating via typed IPC",
+        "2D matrix navigation (Spherical × Cylindrical) with USB barcode scanner input"
+      ]
+    }
+  }
+}
